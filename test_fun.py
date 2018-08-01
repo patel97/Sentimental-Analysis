@@ -1,4 +1,40 @@
+from tweepy import Stream
+from tweepy import OAuthHandler
+from tweepy.streaming import StreamListener
+import json
 import sentiment_mod as s
 
-print(s.sentiment("This movie was awesome! The acting was great, plot was wonderful, and there were pythons...so yea!"))
-print(s.sentiment("This movie was utter junk. There were absolutely 0 pythons. I don't see what the point was at all. Horrible movie, 0/10"))
+#consumer key, consumer secret, access token, access secret.
+ckey="xCAwmo5zvuAm8WxbglE48o0MR"
+csecret="v6R80J38uQgLC5VtwLsk5fgff7GGtn1U43QgRFXTuS1am9wSJe"
+atoken="3256740685-x4860mnThe0sggkWqdDjpGQnUBSMjjdAanZi9Wo"
+asecret="1xAHMYd9cWXFqBImyE71YOt4Ft8D4GfRpHmimn0nhO4W5"
+
+# from twitterapistuff import *
+
+class listener(StreamListener):
+
+	def on_data(self, data):
+
+		all_data = json.loads(data)
+
+		tweet = all_data["text"]
+		sentiment_value, confidence = s.sentiment(tweet)
+		print(tweet, sentiment_value, confidence)
+
+		if confidence*100 >= 80:
+			output = open("twitter-out.txt","a")
+			output.write(sentiment_value)
+			output.write('\n')
+			output.close()
+
+		return True
+
+	def on_error(self, status):
+		print(status)
+
+auth = OAuthHandler(ckey, csecret)
+auth.set_access_token(atoken, asecret)
+
+twitterStream = Stream(auth, listener())
+twitterStream.filter(track=["Fallout"])
